@@ -29,7 +29,7 @@ def resize_imgAnno(sz, data, oj):
     hw = [width, width, height, height]
     top_width, top_height = sz
     top_hw = [top_width, top_width, top_height, top_height]
-    for i in range(len(objects)):
+    for i in objects.keys():
         coor = [int(objects[i]['bndbox'][k]) for k in coord]
         coor = [1.0 * x / y for x, y in zip(coor, hw)]
         coor = [int(x * y) for x, y in zip(coor, top_hw)]
@@ -93,7 +93,7 @@ def satisfy_constraint(objects, coord_random, min_jaccard):  # ,keep
     xmin, xmax, ymin, ymax = coord_random
     found = False
     coord = ['xmin', 'xmax', 'ymin', 'ymax']
-    for i in range(len(objects)):
+    for i in objects.keys():
         object_box = [int(objects[i]['bndbox'][k]) for k in coord]
         # center of object box should located in the random box
         ixmin, ixmax, iymin, iymax = object_box

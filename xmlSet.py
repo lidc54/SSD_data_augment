@@ -98,11 +98,17 @@ def mainFunction(image_path, anno_path):
     idx = random.randint(0, len(keys) - 1)
     return trans_dict[keys[idx]]
 
-
-if __name__ == "__main__":
-    info = "/home/flag54/Documents/dataSetAugument/data/anno/008277.xml"
-    photo = "/home/flag54/Documents/dataSetAugument/data/dataSet/008277.jpg"
+def test():
+    info = "/home/flag54/Documents/dataSetAugument/data/anno/009653.xml"
+    photo = "/home/flag54/Documents/dataSetAugument/data/dataSet/009653.jpg"
     print os.curdir
 
     data, newoj = mainFunction(photo, info)
     print 'o'
+    return data,newoj
+
+
+if __name__ == "__main__":
+    test()
+
+    

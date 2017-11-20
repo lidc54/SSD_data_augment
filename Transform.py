@@ -43,7 +43,7 @@ def transform(image, objects):
         trans_dict = dict(trans_dict, **dict_jaccard)
         print 'po'
     except Exception, e:
-        print e
+        print "what's wrong:",e
 
     return trans_dict
 
@@ -52,7 +52,7 @@ def mirrot_anno(image, objects):
     '''mirror the annoated info at the same time'''
     height, width, channel = image.shape
     coord = ['xmin', 'xmax', 'ymin', 'ymax']
-    for i in range(len(objects)):
+    for i in objects.keys():
         xmin, xmax, ymin, ymax = [int(objects[i]['bndbox'][k]) for k in coord]
         new_xmin = width - xmax
         new_xmax = width - xmin

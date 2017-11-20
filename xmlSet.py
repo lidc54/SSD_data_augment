@@ -11,41 +11,63 @@ from PIL import Image
 class xmlReader(xml.sax.ContentHandler):
     def __init__(self):
         self.contents = {}  # all contents in xml
-        self.tmp = {}  # a piece
-        self.nodes = 0  # tree construction
+        # self.tmp = {}  # a piece
+        self.backend = 0  # postfix
         self.tag = ''  # name of tag
         self.ParentTag = []  # parent tag
+        self.backend_str = []  # follow to store the information of backend
+        self.useful_now = False
+        self.is_common = ''  # the tag has ended,which may bring error in character()
 
     def startElement(self, name, attrs):
+        self.tag = name  # the name of temporal tag
+        self.is_common = ''
         if name == "object":  # object tag in xml
-            self.contents.setdefault(self.nodes, {})
-            self.ParentTag.append(name)
-        elif name == "bndbox":
-            self.contents[self.nodes].setdefault(name, {})
-            # self.tmp[name]={}
-            self.ParentTag.append(name)
-            self.tag = name
-        elif "object" in self.ParentTag:
-            self.tmp.clear()
-            self.tmp[name] = ''
-            self.contents[self.nodes].setdefault(name)
-            self.tag = name
+            self.useful_now = True  # objects is in the contents now.
+        '''
+        self.tmp.clear()#slef.tmp is used for common labels
+        self.tmp[name] = ''
+        self.contents[self.nodes].setdefault(name)#useless
+        '''
 
     def endElement(self, name):
+        if len(self.backend_str):
+            name += self.backend_str[-1]
+        if name in self.ParentTag:  # just suppose all tag is occured didymous or occured as couple
+            self.ParentTag.pop()
+            self.backend_str.pop()
         if name == "object":
-            self.nodes += 1
-            self.ParentTag.pop()
-        elif name == "bndbox":
-            self.ParentTag.pop()
-            # self.contents[self.nodes][name]=self.tmp[name]
+            self.useful_now = False
 
-        if "bndbox" in self.ParentTag:
-            self.contents[self.nodes]["bndbox"][name] = self.tmp[name]
-        elif "object" in self.ParentTag and name != "bndbox":
-            self.contents[self.nodes][name] = self.tmp[name]
+        self.tag = name  # the name must equal tag now
+        self.is_common = name
 
     def characters(self, content):
-        self.tmp[self.tag] = content
+        if self.useful_now:
+            # useless information or the tag has been ended
+            if len(content) > 0 and content[0] == '\t' or self.is_common == self.tag:
+                return
+
+            tmp_dict = self.contents
+            for i in self.ParentTag:  # to the last level of the dict of contents
+                tmp_dict = tmp_dict[i]
+
+            # obtain a name has no conflict
+            key_name = self.tag
+            if tmp_dict.get(key_name):
+                key_name += str(self.backend)
+
+            if content == '\n':  # at least double connect labels
+                tmp_dict[key_name] = {}
+                self.ParentTag.append(key_name)  # this is very important
+                if key_name == self.tag:
+                    self.backend_str.append('')
+                else:
+                    self.backend_str.append(str(self.backend))
+                    self.backend += 1  # all name is different
+            else:
+                tmp_dict[key_name] = content
+
 
     '''
     def __del__(self):
@@ -78,8 +100,8 @@ def mainFunction(image_path, anno_path):
 
 
 if __name__ == "__main__":
-    info = "/home/flag54/Documents/dataSetAugument/data/anno/000001.xml"
-    photo = "/home/flag54/Documents/dataSetAugument/data/dataSet/000001.jpg"
+    info = "/home/flag54/Documents/dataSetAugument/data/anno/008277.xml"
+    photo = "/home/flag54/Documents/dataSetAugument/data/dataSet/008277.jpg"
     print os.curdir
 
     data, newoj = mainFunction(photo, info)

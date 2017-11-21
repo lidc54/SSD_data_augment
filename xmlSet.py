@@ -68,7 +68,6 @@ class xmlReader(xml.sax.ContentHandler):
             else:
                 tmp_dict[key_name] = content
 
-
     '''
     def __del__(self):
         return  self.contents
@@ -89,26 +88,32 @@ def gotXMLInfo(info):
     parser.parse(info)
     return Handler.contents
 
+def remove_unbox(objects):
+    for i in objects.keys():
+        if not (type(objects[i]) == dict and objects[i].has_key('bndbox')):
+            objects.pop(i)
 
 def mainFunction(image_path, anno_path):
     objects = gotXMLInfo(anno_path)
+    remove_unbox(objects)
     image = imread(image_path)
     trans_dict = transform(image, objects)
-    keys = trans_dict.keys()
+    keys = list(trans_dict.keys())
+    print '    ', len(keys)
     idx = random.randint(0, len(keys) - 1)
+
     return trans_dict[keys[idx]]
+
 
 def test():
     info = "/home/flag54/Documents/dataSetAugument/data/anno/009653.xml"
     photo = "/home/flag54/Documents/dataSetAugument/data/dataSet/009653.jpg"
     print os.curdir
 
-    data, newoj = mainFunction(photo, info)
+    data, newoj, origin_data = mainFunction(photo, info)
     print 'o'
-    return data,newoj
+    return data, newoj
 
 
 if __name__ == "__main__":
     test()
-
-    

@@ -13,7 +13,7 @@ def linkImgAnn(cp):
 
 
 def readFile():
-    testFile = 'data/test.txt'
+    testFile = '/home/flag54/Downloads/caffe-ssd/data/VOC0712/trainval.txt'
 
     for bond in open(testFile):
         both = bond.split()
@@ -25,19 +25,28 @@ def readFile():
 
 
 def readAnnoImage():
-    prex = "/home/flag54/Documents/dataSetAugument/"
+    prex = "/home/flag54/Downloads/caffe-ssd/data/VOCdevkit/"
 
     # read xmlAnno
     couples = readFile()
+    xx = (1,)
     for cp in couples:
         try:
             img, anno = cp
-            data, labels = mainFunction(prex + img, prex + anno)
-
+            print prex + img,
+            if img=='VOC2012/JPEGImages/2009_002851.jpg':
+                print 'oo'
+            data, labels, origin_data = mainFunction(prex + img, prex + anno)
+            tmp = []
+            for i in labels.keys():
+                tmp.append(labels[i]['name'])
+            xx += tuple(tmp)
+            # print 'o'
             ###deal with data & its labels
-            show_data(data, labels)
+            # show_data(data, labels)
         except Exception, e:
-            print e
+            print 'line:', e
+    print xx
 
 
 if __name__ == "__main__":

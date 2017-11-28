@@ -29,7 +29,9 @@ def transform(origin_image, objects):
     sz = (300, 300)  # width & height -- order
 
     # 1.expand image$$
-    trans_dict['expand'] = expand(image, objects, sz, origin_image)
+    image_expand, lables_expand = expand(origin_image, objects, sz)
+    whiter_expand=whiter(image_expand)
+    trans_dict['expand'] = [whiter_expand, lables_expand, image_expand]
 
     # 2.origin image -- resize$$
     image, objects = resize_imgAnno(sz, image, objects)
@@ -93,9 +95,11 @@ def jitter(data):
     return image
 
 
-def expand(image, objects, sz, origin_image, ratio=3):
+def expand(image, objects, sz, ratio=3):
     """
-    zoom out
+    zoom out,but be careful:
+    if whiter will be applied, the function(whiter) should be carried out after expand()
+    ranther than before this function.for matters of Mean_value.
     :param image:
     :param objects:
     :param sz:
@@ -107,16 +111,16 @@ def expand(image, objects, sz, origin_image, ratio=3):
     mean_value = [104, 117, 123]
     # build a canvus
     canvus = np.zeros((aug_sz[0], aug_sz[0], channel), dtype="uint8")
-    canvus_origin = np.zeros((aug_sz[0], aug_sz[0], channel), dtype="uint8")  # origin image for show
+    # canvus_origin = np.zeros((aug_sz[0], aug_sz[0], channel), dtype="uint8")  # origin image for show
     for i in range(channel):
         canvus[:, :, i] = mean_value[i]
-        canvus_origin[:, :, i] = mean_value[i]  # origin image for show
+        # canvus_origin[:, :, i] = mean_value[i]  # origin image for show
 
     # insert the image
     h_off = random.randint(0, aug_sz[0] - height)
     w_off = random.randint(0, aug_sz[1] - width)
     canvus[h_off:h_off + height, w_off:w_off + width, :] = image
-    canvus_origin[h_off:h_off + height, w_off:w_off + width, :] = origin_image  # origin image for show
+    # canvus_origin[h_off:h_off + height, w_off:w_off + width, :] = origin_image  # origin image for show
     # adjust the labels
     new_objects = copy.deepcopy(objects)
     coord = ['xmin', 'xmax', 'ymin', 'ymax']
@@ -130,8 +134,8 @@ def expand(image, objects, sz, origin_image, ratio=3):
             coor[key] = newCoor[k]
 
     canvus, new_objects = resize_imgAnno(sz, canvus, new_objects)
-    canvus_origin, _ = resize_imgAnno(sz, canvus_origin, new_objects)
-    return [canvus, new_objects, canvus_origin]  # image,lables,origin_image
+    # canvus_origin, _ = resize_imgAnno(sz, canvus_origin, new_objects)
+    return [canvus, new_objects]  # , canvus_origin]  # image,lables,origin_image
 
 
 def whiter(image):
@@ -140,8 +144,9 @@ def whiter(image):
     :param image: image.shape=[300,300,3];height,width,channel
     :return: the data after whitering
     """
+    im=image.astype('float64')
     data = np.zeros(image.shape).astype('float16')
     w, h, c = image.shape
     for i in range(c):
-        data[:, :, i] = (image[:, :, i] - np.mean(image[:, :, i])) / np.std(image[:, :, i])
+        data[:, :, i] = (im[:, :, i] - np.mean(im[:, :, i])) / np.std(im[:, :, i])
     return data

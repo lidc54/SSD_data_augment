@@ -1,5 +1,5 @@
 # encoding : utf-8
-import random
+import random,math,cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
@@ -277,3 +277,33 @@ def corp_image(image, objects, sz, origin_image):
             all_crop[i] = [image.copy(), copy.deepcopy(objects), origin_image.copy()]  # origin++
 
     return all_crop
+
+
+def show(imgs,point):#plot a photo & its face markpoint
+    img=imgs[:,:]
+    for i in range(len(point)/2):
+        cv2.circle(img,(int(point[i*2]),int(point[i*2+1])),1,(255,250,0),1)
+    plt.imshow(img)#
+    plt.show()
+
+def ImgRotate(srcImg, degree):#rotation a photo
+    h,w,c=srcImg.shape
+    diaLength = int(math.sqrt(h**2 + w**2))
+    tempImg = np.zeros((diaLength, diaLength,c), dtype=srcImg.dtype)
+    tx = diaLength / 2 - w / 2 # left
+    ty = diaLength / 2 - h / 2 # top
+    tempImg[ty:ty + h, tx:tx + w] = srcImg
+    matRotation=cv2.getRotationMatrix2D((diaLength/2,diaLength/2),degree,1)
+    imgRotation=cv2.warpAffine(tempImg,matRotation,(diaLength, diaLength),borderValue=(0,0,0))
+    return imgRotation
+    
+def getPointAffinedPos(x ,y, h, w, degree):#rotation point related to its origin photo
+    diaLength = math.sqrt(h**2 + w**2)
+    center_x, center_y = diaLength / 2, diaLength / 2
+    x -= w / 2
+    y -= h / 2
+    angle = degree * np.pi / 180.0
+    
+    dst_x = round( x * math.cos(angle) + y * math.sin(angle) +  center_x)
+    dst_y = round(-x * math.sin(angle) + y * math.cos(angle) + center_y)
+    return dst_x, dst_y
